@@ -101,6 +101,12 @@ async def start():
     
     await idle()
 
-if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(start())
+if __name__ == "__main__":
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            loop.create_task(start())  # Use create_task() instead of asyncio.run()
+        else:
+            loop.run_until_complete(start())
+    except KeyboardInterrupt:
+        logging.info("Service Stopped Bye 👋")
