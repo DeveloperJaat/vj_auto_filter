@@ -90,7 +90,7 @@ async def start():
     await idle()
 
 
-if name == 'main':
+if __name__ == '__main__':
     try:
         asyncio.run(start())
     except KeyboardInterrupt:
