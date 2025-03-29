@@ -41,6 +41,7 @@ async def start():
     print('Initalizing Your Bot')
     bot_info = await NamanBot.get_me()
     await initialize_clients()
+    
     for name in files:
         with open(name) as a:
             patt = Path(a.name)
@@ -52,47 +53,54 @@ async def start():
             spec.loader.exec_module(load)
             sys.modules["plugins." + plugin_name] = load
             print("Naman Imported => " + plugin_name)
+
     if ON_HEROKU:
         asyncio.create_task(ping_server())
+
     b_users, b_chats = await db.get_banned()
     temp.BANNED_USERS = b_users
     temp.BANNED_CHATS = b_chats
+
     await Media.ensure_indexes()
     await Media2.ensure_indexes()
-    #choose the right db by checking the free space
+
+    # Choose the right DB by checking the free space
     stats = await clientDB.command('dbStats')
-    #calculating the free db space from bytes to MB
-    free_dbSize = round(512-((stats['dataSize']/(1024*1024))+(stats['indexSize']/(1024*1024))), 2)
-    if SECONDDB_URI and free_dbSize<10: #if the primary db have less than 10MB left, use second DB.
+    free_dbSize = round(512 - ((stats['dataSize']/(1024*1024)) + (stats['indexSize']/(1024*1024))), 2)
+
+    if SECONDDB_URI and free_dbSize < 10:
         tempDict["indexDB"] = SECONDDB_URI
-        logging.info(f"Since Primary DB have only {free_dbSize} MB left, Secondary DB will be used to store datas.")
+        logging.info(f"Primary DB has only {free_dbSize} MB left, using Secondary DB.")
     elif SECONDDB_URI is None:
-        logging.error("Missing second DB URI !\n\nAdd SECONDDB_URI now !\n\nExiting...")
+        logging.error("Missing SECONDDB_URI! Add it now. Exiting...")
         exit()
     else:
-        logging.info(f"Since primary DB have enough space ({free_dbSize}MB) left, It will be used for storing datas.")
+        logging.info(f"Primary DB has enough space ({free_dbSize} MB), using it.")
+
     await choose_mediaDB()
+
     me = await NamanBot.get_me()
     temp.ME = me.id
     temp.U_NAME = me.username
     temp.B_NAME = me.first_name
+
     logging.info(LOG_STR)
     logging.info(script.LOGO)
+
     tz = pytz.timezone('Asia/Kolkata')
     today = date.today()
     now = datetime.now(tz)
     time = now.strftime("%H:%M:%S %p")
+
     await NamanBot.send_message(chat_id=LOG_CHANNEL, text=script.RESTART_TXT.format(temp.U_NAME, temp.B_NAME, today, time))
+
     app = web.AppRunner(await web_server())
     await app.setup()
     bind_address = "0.0.0.0"
     await web.TCPSite(app, bind_address, PORT).start()
+    
     await idle()
 
-
 if __name__ == '__main__':
-    try:
-        asyncio.run(start())
-    except KeyboardInterrupt:
-        logging.info('Service Stopped Bye 👋')
-
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(start())
