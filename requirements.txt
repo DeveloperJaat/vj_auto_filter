@@ -43,4 +43,3 @@ dnspython==2.3.0
 ffmpeg-python>=0.2.0
 openai==0.25.0
 git+https://github.com/Joelkb/cinemagoer
-PYTHON_VERSION=3.10.0
